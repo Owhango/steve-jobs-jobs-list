@@ -1,6 +1,4 @@
 import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, CheckCircle2, Circle, Search, Brain } from "lucide-react";
 
 const PRIORITIES = {
   urgent: {
@@ -36,24 +34,46 @@ const PRIORITIES = {
 };
 
 const STARTER_TASKS = [
-  { id: 1, title: "Reply to Joe about Park & Ride parking", priority: "urgent", done: false },
-  { id: 2, title: "Check Marini plant fabrication notes", priority: "soon", done: false },
-  { id: 3, title: "Print asphalt lab worksheet double-sided", priority: "soon", done: false },
-  { id: 4, title: "Review Tongariro shuttle wording", priority: "later", done: false },
+  {
+    id: 1,
+    title: "Reply to Joe about Park & Ride parking",
+    priority: "urgent",
+    done: false,
+  },
+  {
+    id: 2,
+    title: "Check Marini plant fabrication notes",
+    priority: "soon",
+    done: false,
+  },
+  {
+    id: 3,
+    title: "Print asphalt lab worksheet double-sided",
+    priority: "soon",
+    done: false,
+  },
+  {
+    id: 4,
+    title: "Review Tongariro shuttle wording",
+    priority: "later",
+    done: false,
+  },
 ];
 
 function cleanTaskText(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 
-export default function TrafficLightJobsApp() {
+export default function App() {
   const [tasks, setTasks] = useState(STARTER_TASKS);
   const [newTask, setNewTask] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("urgent");
   const [activeView, setActiveView] = useState("all");
   const [search, setSearch] = useState("");
 
-  const activeTasks = useMemo(() => tasks.filter((task) => !task.done), [tasks]);
+  const activeTasks = useMemo(() => {
+    return tasks.filter((task) => !task.done);
+  }, [tasks]);
 
   const counts = useMemo(() => {
     return {
@@ -65,15 +85,19 @@ export default function TrafficLightJobsApp() {
 
   const visibleTasks = useMemo(() => {
     const searchText = search.toLowerCase().trim();
+
     return tasks.filter((task) => {
       const matchesView = activeView === "all" || task.priority === activeView;
-      const matchesSearch = !searchText || task.title.toLowerCase().includes(searchText);
+      const matchesSearch =
+        !searchText || task.title.toLowerCase().includes(searchText);
+
       return matchesView && matchesSearch;
     });
   }, [tasks, activeView, search]);
 
   function addTask() {
     const title = cleanTaskText(newTask);
+
     if (!title) return;
 
     setTasks((current) => [
@@ -85,12 +109,15 @@ export default function TrafficLightJobsApp() {
       },
       ...current,
     ]);
+
     setNewTask("");
   }
 
   function toggleDone(id) {
     setTasks((current) =>
-      current.map((task) => (task.id === id ? { ...task, done: !task.done } : task))
+      current.map((task) =>
+        task.id === id ? { ...task, done: !task.done } : task
+      )
     );
   }
 
@@ -100,7 +127,9 @@ export default function TrafficLightJobsApp() {
 
   function changePriority(id, priority) {
     setTasks((current) =>
-      current.map((task) => (task.id === id ? { ...task, priority } : task))
+      current.map((task) =>
+        task.id === id ? { ...task, priority } : task
+      )
     );
   }
 
@@ -110,12 +139,14 @@ export default function TrafficLightJobsApp() {
         <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm text-neutral-600 shadow-sm">
-              <Brain className="h-4 w-4" />
+              <span className="text-base">🧠</span>
               Busy minds need simple
             </div>
+
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               What needs your attention?
             </h1>
+
             <p className="mt-2 text-neutral-600">
               No folders. No clutter. Just now, soon, or later.
             </p>
@@ -125,12 +156,15 @@ export default function TrafficLightJobsApp() {
         <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {Object.entries(PRIORITIES).map(([key, item]) => {
             const isActive = activeView === key;
+
             return (
               <button
                 key={key}
                 onClick={() => setActiveView(isActive ? "all" : key)}
                 className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${
-                  isActive ? `${item.border} ring-2 ring-offset-2` : "border-neutral-200"
+                  isActive
+                    ? `${item.border} ring-2 ring-offset-2`
+                    : "border-neutral-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -138,9 +172,13 @@ export default function TrafficLightJobsApp() {
                     <span className={`h-4 w-4 rounded-full ${item.colour}`} />
                     <span className="text-lg font-semibold">{item.short}</span>
                   </div>
+
                   <span className="text-3xl font-bold">{counts[key]}</span>
                 </div>
-                <p className="mt-2 text-sm text-neutral-600">{item.helper}</p>
+
+                <p className="mt-2 text-sm text-neutral-600">
+                  {item.helper}
+                </p>
               </button>
             );
           })}
@@ -158,6 +196,7 @@ export default function TrafficLightJobsApp() {
                 placeholder="Type one thing on your mind..."
                 className="min-h-12 flex-1 rounded-xl border border-neutral-200 bg-white px-4 text-base outline-none focus:ring-2 focus:ring-neutral-300"
               />
+
               <div className="grid grid-cols-3 gap-2 lg:w-96">
                 {Object.entries(PRIORITIES).map(([key, item]) => (
                   <button
@@ -173,11 +212,13 @@ export default function TrafficLightJobsApp() {
                   </button>
                 ))}
               </div>
+
               <button
                 onClick={addTask}
                 className="inline-flex min-h-12 items-center justify-center rounded-xl bg-neutral-950 px-5 font-medium text-white transition hover:bg-neutral-800"
               >
-                <Plus className="mr-2 h-4 w-4" /> Add
+                <span className="mr-2">+</span>
+                Add
               </button>
             </div>
           </div>
@@ -185,7 +226,8 @@ export default function TrafficLightJobsApp() {
 
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm sm:w-80">
-            <Search className="h-4 w-4 text-neutral-400" />
+            <span className="text-neutral-400">⌕</span>
+
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -193,6 +235,7 @@ export default function TrafficLightJobsApp() {
               className="w-full bg-transparent text-sm outline-none"
             />
           </div>
+
           <button
             onClick={() => setActiveView("all")}
             className="text-sm font-medium text-neutral-500 hover:text-neutral-900"
@@ -202,59 +245,76 @@ export default function TrafficLightJobsApp() {
         </div>
 
         <div className="space-y-3">
-          <AnimatePresence>
-            {visibleTasks.map((task) => {
-              const item = PRIORITIES[task.priority];
-              return (
-                <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className={`rounded-2xl border bg-white p-4 shadow-sm ${task.done ? "opacity-50" : ""}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <button onClick={() => toggleDone(task.id)} className="mt-1 text-neutral-500">
-                      {task.done ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
-                    </button>
+          {visibleTasks.map((task) => {
+            const item = PRIORITIES[task.priority];
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`h-3 w-3 rounded-full ${item.colour}`} />
-                        <span className={`text-xs font-semibold uppercase tracking-wide ${item.text}`}>
-                          {item.label}
-                        </span>
-                      </div>
-                      <p className={`mt-1 text-lg ${task.done ? "line-through" : ""}`}>{task.title}</p>
+            return (
+              <div
+                key={task.id}
+                className={`rounded-2xl border bg-white p-4 shadow-sm ${
+                  task.done ? "opacity-50" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <button
+                    onClick={() => toggleDone(task.id)}
+                    className="mt-1 text-neutral-500"
+                  >
+                    {task.done ? (
+                      <span className="text-xl">✓</span>
+                    ) : (
+                      <span className="text-xl">○</span>
+                    )}
+                  </button>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`h-3 w-3 rounded-full ${item.colour}`}
+                      />
+
+                      <span
+                        className={`text-xs font-semibold uppercase tracking-wide ${item.text}`}
+                      >
+                        {item.label}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={() => removeTask(task.id)}
-                      className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                    <p
+                      className={`mt-1 text-lg ${
+                        task.done ? "line-through" : ""
+                      }`}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                      {task.title}
+                    </p>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-3 gap-2 pl-9">
-                    {Object.entries(PRIORITIES).map(([key, option]) => (
-                      <button
-                        key={key}
-                        onClick={() => changePriority(task.id, key)}
-                        className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${
-                          task.priority === key
-                            ? `${option.soft} ${option.border} ${option.text}`
-                            : "border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
-                        }`}
-                      >
-                        {option.dot} {option.short}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                  <button
+                    onClick={() => removeTask(task.id)}
+                    className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+                  >
+                    <span>×</span>
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 gap-2 pl-9">
+                  {Object.entries(PRIORITIES).map(([key, option]) => (
+                    <button
+                      key={key}
+                      onClick={() => changePriority(task.id, key)}
+                      className={`rounded-xl border px-3 py-2 text-xs font-medium transition ${
+                        task.priority === key
+                          ? `${option.soft} ${option.border} ${option.text}`
+                          : "border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
+                      }`}
+                    >
+                      {option.dot} {option.short}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
           {visibleTasks.length === 0 && (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-neutral-500">

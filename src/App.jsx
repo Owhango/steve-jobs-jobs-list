@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, CheckCircle2, Circle, Search, Brain } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 const PRIORITIES = {
   urgent: {
@@ -148,8 +146,8 @@ export default function TrafficLightJobsApp() {
           })}
         </div>
 
-        <Card className="mb-5 rounded-2xl border-neutral-200 shadow-sm">
-          <CardContent className="p-4">
+        <div className="mb-5 rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          <div className="p-4">
             <div className="flex flex-col gap-3 lg:flex-row">
               <input
                 value={newTask}
@@ -175,12 +173,15 @@ export default function TrafficLightJobsApp() {
                   </button>
                 ))}
               </div>
-              <Button onClick={addTask} className="min-h-12 rounded-xl px-5">
+              <button
+                onClick={addTask}
+                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-neutral-950 px-5 font-medium text-white transition hover:bg-neutral-800"
+              >
                 <Plus className="mr-2 h-4 w-4" /> Add
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm sm:w-80">

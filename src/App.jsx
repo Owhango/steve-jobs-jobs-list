@@ -2,27 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 
 function analyzeTask(task, type) {
   const text = task.toLowerCase();
-
   let score = 0;
   const reasons = [];
 
   const signalWords = [
     "tax", "invoice", "client", "audit", "health", "meeting", "deadline",
-    "strategy", "repair", "urgent", "critical", "payroll", "legal",
-    "contract", "doctor", "family", "important", "fix", "money",
-    "business", "plan", "decision", "order", "book", "submit", "call",
-    "customer", "quote", "safety", "risk", "due", "finish", "send"
+    "strategy", "repair", "urgent", "critical", "payroll", "legal", "contract",
+    "doctor", "family", "important", "fix", "money", "business", "plan",
+    "decision", "order", "book", "submit", "call", "customer", "quote",
+    "safety", "risk", "due", "finish", "send", "pay", "school", "appointment",
+    "workout", "diet", "sleep", "relationship", "parent", "child"
   ];
 
   const noiseWords = [
-    "youtube", "instagram", "facebook", "scroll", "browse", "later",
-    "someday", "maybe", "tidy", "organize", "watch", "check social",
-    "random", "move", "sort", "clean", "look at"
+    "youtube", "instagram", "facebook", "scroll", "browse", "later", "someday",
+    "maybe", "tidy", "organize", "watch", "check social", "random", "move",
+    "sort", "clean", "look at", "play around", "mess around"
   ];
 
   const deepWorkWords = [
-    "design", "build", "strategy", "write", "create", "develop",
-    "problem", "analysis", "system", "plan", "review", "prepare"
+    "design", "build", "strategy", "write", "create", "develop", "problem",
+    "analysis", "system", "plan", "review", "prepare", "think", "learn"
   ];
 
   signalWords.forEach((word) => {
@@ -50,14 +50,14 @@ function analyzeTask(task, type) {
   if (text.length > 40) score += 1;
 
   let category = "Noise";
-  let recommendation = "Defer, batch later, delegate, or ignore.";
+  let recommendation = "This can safely wait. Park it, batch it, delegate it, or delete it.";
 
   if (score >= 7) {
     category = "Critical Signal";
-    recommendation = "Protect time for this today.";
+    recommendation = "This deserves protected attention today.";
   } else if (score >= 4) {
     category = "Signal";
-    recommendation = "Schedule and complete intentionally.";
+    recommendation = "Schedule this intentionally before the day gets noisy.";
   }
 
   return { score, category, recommendation, reasons };
@@ -67,14 +67,16 @@ export default function App() {
   const [input, setInput] = useState("");
   const [type, setType] = useState("Work");
   const [showPlan, setShowPlan] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [theme, setTheme] = useState("light");
 
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("signal-tasks");
+    const saved = localStorage.getItem("signal-noise-tasks");
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem("signal-tasks", JSON.stringify(tasks));
+    localStorage.setItem("signal-noise-tasks", JSON.stringify(tasks));
   }, [tasks]);
 
   function addTask() {
@@ -85,7 +87,7 @@ export default function App() {
     setTasks([
       {
         id: Date.now(),
-        text: input,
+        text: input.trim(),
         type,
         ...analysis,
       },
@@ -99,7 +101,12 @@ export default function App() {
     if (confirm("Clear all tasks?")) {
       setTasks([]);
       setShowPlan(false);
+      setFocusMode(false);
     }
+  }
+
+  function removeTask(id) {
+    setTasks(tasks.filter((task) => task.id !== id));
   }
 
   const signals = useMemo(() => {
@@ -112,21 +119,81 @@ export default function App() {
     return tasks.filter((t) => t.category === "Noise");
   }, [tasks]);
 
+  const topSignals = signals.slice(0, 3);
+
+  if (focusMode) {
+    return (
+      <div className="app darkApp">
+        <style>{css}</style>
+        <section className="focusScreen">
+          <div className="focusLogo">
+            <Logo />
+            <span>Signal : Noise</span>
+          </div>
+
+          <div className="focusEyebrow">Focus Mode</div>
+          <h1>Only the signal remains.</h1>
+          <p className="focusIntro">
+            These are the few things that deserve your next focused block of attention.
+          </p>
+
+          <div className="focusCards">
+            {topSignals.length === 0 ? (
+              <div className="focusEmpty">No signals selected yet.</div>
+            ) : (
+              topSignals.map((task, index) => (
+                <div className="focusTask" key={task.id}>
+                  <div className="focusNumber">{index + 1}</div>
+                  <div>
+                    <h2>{task.text}</h2>
+                    <p>{task.recommendation}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <button className="exitFocus" onClick={() => setFocusMode(false)}>
+            Exit Focus Mode
+          </button>
+        </section>
+      </div>
+    );
+  }
+
   return (
-    <div className="app">
+    <div className={`app ${theme === "dark" ? "darkApp" : ""}`}>
       <style>{css}</style>
 
       <div className="shell">
+        <nav className="topNav">
+          <div className="brand">
+            <Logo />
+            <div>
+              <strong>Signal : Noise</strong>
+              <span>Daily Planner</span>
+            </div>
+          </div>
+
+          <div className="navActions">
+            <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+              {theme === "light" ? "Dark" : "Light"}
+            </button>
+            <button onClick={() => setFocusMode(true)} disabled={signals.length === 0}>
+              Focus Mode
+            </button>
+          </div>
+        </nav>
+
         <section className="hero glass">
-          <div className="eyebrow">Signal over noise</div>
+          <div className="eyebrow">Find what matters. Park what doesn’t.</div>
           <h1>
-            Find the signal.
+            Clear your head.
             <br />
-            Ignore the noise.
+            Find the signal.
           </h1>
           <p>
-            A calm decision system that turns mental overload into a simple focus
-            plan for your next 18 hours.
+            Brain dump the noise. The planner separates what deserves attention from what can wait, so your next move becomes obvious.
           </p>
         </section>
 
@@ -134,7 +201,7 @@ export default function App() {
           <div className="captureTop">
             <div>
               <h2>What's on your mind?</h2>
-              <p>Brain dump the task. The system will decide where it belongs.</p>
+              <p>Enter one thought, task, worry, or reminder. The system will classify it.</p>
             </div>
 
             <div className="toggle">
@@ -153,8 +220,11 @@ export default function App() {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Need to call accountant about BAS..."
+            placeholder="Example: Call accountant about BAS before Friday..."
             rows={4}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") addTask();
+            }}
           />
 
           <div className="actions">
@@ -180,7 +250,7 @@ export default function App() {
           <Stat label="Captured" value={tasks.length} />
           <Stat label="Signals" value={signals.length} />
           <Stat label="Noise" value={noise.length} />
-          <Stat label="Focus limit" value="3–5" />
+          <Stat label="Top focus" value={topSignals.length} />
         </section>
 
         {showPlan && (
@@ -190,9 +260,19 @@ export default function App() {
                 <div className="eyebrow">Generated focus plan</div>
                 <h2>Your next 18 hours</h2>
               </div>
-              <button className="printBtn" onClick={() => window.print()}>
-                Print
-              </button>
+
+              <div className="planButtons">
+                <button className="printBtn" onClick={() => window.print()}>
+                  Print
+                </button>
+                <button
+                  className="printBtn mutedBtn"
+                  onClick={() => setFocusMode(true)}
+                  disabled={signals.length === 0}
+                >
+                  Enter Focus
+                </button>
+              </div>
             </div>
 
             <div className="planGrid">
@@ -211,9 +291,7 @@ export default function App() {
 
               <div className="planColumn right">
                 <h3>Noise Quarantine</h3>
-                <p className="columnHint">
-                  Defer, batch, delegate, delete, or park these.
-                </p>
+                <p className="columnHint">Defer, batch, delegate, delete, or park these.</p>
 
                 {noise.length === 0 ? (
                   <Empty text="No noise tasks detected." />
@@ -235,7 +313,9 @@ export default function App() {
             {signals.length === 0 ? (
               <Empty text="No important signals detected yet." />
             ) : (
-              signals.map((task) => <TaskCard key={task.id} task={task} />)
+              signals.map((task) => (
+                <TaskCard key={task.id} task={task} removeTask={removeTask} />
+              ))
             )}
           </div>
 
@@ -244,19 +324,29 @@ export default function App() {
               <div className="eyebrow">Noise quarantine</div>
               <h2>Mentally parked.</h2>
               <p>
-                Low-value, reactive or non-critical items are stored here so they
-                stop stealing attention.
+                Low-value, reactive or non-critical items are stored here so they stop stealing attention.
               </p>
             </div>
 
             {noise.length === 0 ? (
               <Empty text="No noise detected." />
             ) : (
-              noise.map((task) => <TaskCard key={task.id} task={task} muted />)
+              noise.map((task) => (
+                <TaskCard key={task.id} task={task} muted removeTask={removeTask} />
+              ))
             )}
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="logoMark">
+      <div className="logoDot"></div>
+      <div className="logoLine"></div>
     </div>
   );
 }
@@ -286,7 +376,7 @@ function PlanItem({ task, index, muted }) {
   );
 }
 
-function TaskCard({ task, muted }) {
+function TaskCard({ task, muted, removeTask }) {
   return (
     <div className={muted ? "taskCard muted" : "taskCard"}>
       <div className="taskTop">
@@ -310,6 +400,10 @@ function TaskCard({ task, muted }) {
           ))}
         </div>
       )}
+
+      <button className="removeBtn" onClick={() => removeTask(task.id)}>
+        Remove
+      </button>
     </div>
   );
 }
@@ -326,58 +420,174 @@ body {
 .app {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.95), transparent 35%),
-    linear-gradient(135deg, #f4f2ee 0%, #e9e7e1 100%);
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,0.95), transparent 38%),
+    radial-gradient(circle at 85% 12%, rgba(228,221,207,0.85), transparent 35%),
+    linear-gradient(135deg, #f7f5ef 0%, #e8e4da 100%);
   color: #111;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+.darkApp {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(80,80,90,0.35), transparent 35%),
+    radial-gradient(circle at 82% 12%, rgba(150,120,80,0.22), transparent 32%),
+    linear-gradient(135deg, #090909 0%, #151515 100%);
+  color: #f6f2ea;
 }
 
 .shell {
   width: min(1120px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 28px 0 60px;
+  padding: 24px 0 70px;
 }
 
 .glass {
-  background: rgba(255,255,255,0.82);
-  backdrop-filter: blur(18px);
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(22px);
   border: 1px solid rgba(255,255,255,0.7);
-  box-shadow: 0 24px 70px rgba(0,0,0,0.08);
+  box-shadow: 0 28px 80px rgba(0,0,0,0.09);
+}
+
+.darkApp .glass,
+.darkApp .sectionHeader.light,
+.darkApp .empty {
+  background: rgba(28,28,30,0.82);
+  border-color: rgba(255,255,255,0.08);
+  color: #f7f2e8;
+}
+
+.topNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 8px 4px;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand strong {
+  display: block;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+
+.brand span {
+  display: block;
+  color: #777;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
+
+.darkApp .brand span,
+.darkApp .eyebrow,
+.darkApp .capture p,
+.darkApp .hero p,
+.darkApp .sectionHeader p,
+.darkApp .columnHint {
+  color: #aaa;
+}
+
+.logoMark {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: #111;
+  display: grid;
+  place-items: center;
+  position: relative;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+}
+
+.darkApp .logoMark {
+  background: #f7f2e8;
+}
+
+.logoDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  left: 12px;
+}
+
+.darkApp .logoDot {
+  background: #111;
+}
+
+.logoLine {
+  width: 18px;
+  height: 3px;
+  border-radius: 99px;
+  background: white;
+  position: absolute;
+  right: 10px;
+}
+
+.darkApp .logoLine {
+  background: #111;
+}
+
+.navActions {
+  display: flex;
+  gap: 8px;
+}
+
+.navActions button {
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.72);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.darkApp .navActions button {
+  background: rgba(255,255,255,0.08);
+  color: #f7f2e8;
+  border-color: rgba(255,255,255,0.12);
 }
 
 .hero {
-  border-radius: 34px;
-  padding: clamp(28px, 5vw, 56px);
-  margin-bottom: 18px;
+  border-radius: 38px;
+  padding: clamp(34px, 6vw, 68px);
+  margin-bottom: 20px;
 }
 
 .eyebrow {
   color: #777;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 2.6px;
+  letter-spacing: 2.8px;
   text-transform: uppercase;
 }
 
 .hero h1 {
-  font-size: clamp(42px, 8vw, 78px);
-  line-height: 0.95;
-  margin: 12px 0 18px;
-  letter-spacing: -4px;
+  font-size: clamp(48px, 8.5vw, 88px);
+  line-height: 0.92;
+  margin: 14px 0 22px;
+  letter-spacing: -5px;
 }
 
 .hero p {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0;
   color: #555;
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 19px;
+  line-height: 1.65;
 }
 
 .capture {
-  border-radius: 30px;
-  padding: 24px;
-  margin-bottom: 18px;
+  border-radius: 34px;
+  padding: 28px;
+  margin-bottom: 20px;
 }
 
 .captureTop {
@@ -385,30 +595,38 @@ body {
   justify-content: space-between;
   gap: 18px;
   align-items: flex-start;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .capture h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
+  letter-spacing: -0.6px;
 }
 
 .capture p {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
   color: #666;
 }
 
 textarea {
   width: 100%;
-  border: 1px solid #d8d8d8;
-  border-radius: 24px;
-  padding: 20px;
+  border: 1px solid #d8d3c9;
+  border-radius: 28px;
+  padding: 22px;
   resize: none;
   outline: none;
   font-size: 18px;
   line-height: 1.45;
   background: rgba(255,255,255,0.72);
-  transition: 0.2s;
+  transition: 0.2s ease;
+  color: #111;
+}
+
+.darkApp textarea {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  color: #f7f2e8;
 }
 
 textarea:focus {
@@ -416,10 +634,15 @@ textarea:focus {
   box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
 }
 
+.darkApp textarea:focus {
+  border-color: #f7f2e8;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+}
+
 .toggle {
   display: flex;
   gap: 8px;
-  background: #eee;
+  background: rgba(0,0,0,0.06);
   padding: 6px;
   border-radius: 999px;
 }
@@ -428,10 +651,17 @@ textarea:focus {
 .primary,
 .secondary,
 .ghost,
-.printBtn {
+.printBtn,
+.removeBtn,
+.exitFocus {
   border: none;
   cursor: pointer;
   font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .toggle button {
@@ -441,9 +671,18 @@ textarea:focus {
   background: transparent;
 }
 
+.darkApp .toggle button {
+  color: #ddd;
+}
+
 .toggle button.active {
   background: #111;
   color: white;
+}
+
+.darkApp .toggle button.active {
+  background: #f7f2e8;
+  color: #111;
 }
 
 .actions {
@@ -451,33 +690,50 @@ textarea:focus {
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .primary,
 .secondary,
 .ghost,
 .printBtn {
-  padding: 14px 20px;
-  border-radius: 18px;
+  padding: 15px 22px;
+  border-radius: 20px;
   font-size: 14px;
 }
 
 .primary {
   background: #111;
   color: #fff;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+}
+
+.darkApp .primary {
+  background: #f7f2e8;
+  color: #111;
 }
 
 .secondary {
-  background: #f2efe8;
+  background: #f3eee3;
   color: #111;
   border: 1px solid #ded8cc;
+}
+
+.darkApp .secondary {
+  background: rgba(255,255,255,0.08);
+  color: #f7f2e8;
+  border-color: rgba(255,255,255,0.12);
 }
 
 .ghost {
   background: transparent;
   color: #777;
   border: 1px solid #ddd;
+}
+
+.darkApp .ghost {
+  color: #aaa;
+  border-color: rgba(255,255,255,0.12);
 }
 
 button:disabled {
@@ -489,12 +745,12 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .stat {
-  border-radius: 24px;
-  padding: 22px;
+  border-radius: 28px;
+  padding: 24px;
 }
 
 .stat span {
@@ -509,14 +765,14 @@ button:disabled {
 .stat strong {
   display: block;
   margin-top: 8px;
-  font-size: 38px;
+  font-size: 40px;
   letter-spacing: -1px;
 }
 
 .focusPlan {
-  border-radius: 34px;
-  padding: 28px;
-  margin-bottom: 22px;
+  border-radius: 38px;
+  padding: 32px;
+  margin-bottom: 24px;
 }
 
 .planHeader {
@@ -524,13 +780,18 @@ button:disabled {
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .planHeader h2 {
-  font-size: 36px;
-  margin: 6px 0 0;
-  letter-spacing: -1.5px;
+  font-size: 40px;
+  margin: 7px 0 0;
+  letter-spacing: -1.8px;
+}
+
+.planButtons {
+  display: flex;
+  gap: 10px;
 }
 
 .printBtn {
@@ -538,16 +799,25 @@ button:disabled {
   color: #fff;
 }
 
+.mutedBtn {
+  background: #383838;
+}
+
+.darkApp .printBtn {
+  background: #f7f2e8;
+  color: #111;
+}
+
 .planGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 20px;
 }
 
 .planColumn {
-  border-radius: 28px;
-  padding: 22px;
-  min-height: 260px;
+  border-radius: 32px;
+  padding: 26px;
+  min-height: 280px;
 }
 
 .planColumn.left {
@@ -555,28 +825,36 @@ button:disabled {
   color: #fff;
 }
 
+.darkApp .planColumn.left {
+  background: #f7f2e8;
+  color: #111;
+}
+
 .planColumn.right {
-  background: #efefed;
+  background: #efede8;
+}
+
+.darkApp .planColumn.right {
+  background: rgba(255,255,255,0.08);
 }
 
 .planColumn h3 {
   margin: 0;
-  font-size: 26px;
-  letter-spacing: -0.8px;
+  font-size: 28px;
+  letter-spacing: -1px;
 }
 
 .columnHint {
-  color: inherit;
   opacity: 0.65;
-  margin: 8px 0 18px;
+  margin: 8px 0 20px;
 }
 
 .planItem {
   display: flex;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  margin-bottom: 10px;
+  gap: 13px;
+  padding: 16px;
+  border-radius: 21px;
+  margin-bottom: 11px;
   background: rgba(255,255,255,0.12);
 }
 
@@ -584,9 +862,13 @@ button:disabled {
   background: rgba(0,0,0,0.05);
 }
 
+.darkApp .planItem.muted {
+  background: rgba(255,255,255,0.07);
+}
+
 .planNum {
-  min-width: 34px;
-  height: 34px;
+  min-width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -613,13 +895,13 @@ button:disabled {
 .mainGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 22px;
+  gap: 24px;
 }
 
 .sectionHeader {
-  border-radius: 28px;
-  padding: 26px;
-  margin-bottom: 14px;
+  border-radius: 32px;
+  padding: 28px;
+  margin-bottom: 16px;
 }
 
 .sectionHeader.dark {
@@ -627,15 +909,20 @@ button:disabled {
   color: #fff;
 }
 
+.darkApp .sectionHeader.dark {
+  background: #f7f2e8;
+  color: #111;
+}
+
 .sectionHeader.light {
-  background: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.78);
   box-shadow: 0 20px 50px rgba(0,0,0,0.05);
 }
 
 .sectionHeader h2 {
   margin: 8px 0 0;
-  font-size: 34px;
-  letter-spacing: -1px;
+  font-size: 36px;
+  letter-spacing: -1.2px;
 }
 
 .sectionHeader p {
@@ -644,26 +931,38 @@ button:disabled {
 }
 
 .empty {
-  background: rgba(255,255,255,0.82);
-  border-radius: 22px;
-  padding: 22px;
+  background: rgba(255,255,255,0.78);
+  border-radius: 24px;
+  padding: 24px;
   color: #777;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .taskCard {
   background: #111;
   color: #fff;
-  border-radius: 26px;
-  padding: 24px;
-  margin-bottom: 14px;
-  box-shadow: 0 18px 45px rgba(0,0,0,0.14);
+  border-radius: 30px;
+  padding: 26px;
+  margin-bottom: 16px;
+  box-shadow: 0 22px 55px rgba(0,0,0,0.16);
+  position: relative;
+  overflow: hidden;
+}
+
+.darkApp .taskCard {
+  background: #f7f2e8;
+  color: #111;
 }
 
 .taskCard.muted {
-  background: #dedddb;
+  background: #dfddd8;
   color: #111;
   box-shadow: none;
+}
+
+.darkApp .taskCard.muted {
+  background: rgba(255,255,255,0.08);
+  color: #f7f2e8;
 }
 
 .taskTop {
@@ -673,19 +972,18 @@ button:disabled {
 }
 
 .taskType {
-  color: inherit;
   opacity: 0.62;
   font-size: 11px;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.9px;
   text-transform: uppercase;
   font-weight: 900;
 }
 
 .taskCard h3 {
-  font-size: 23px;
+  font-size: 24px;
   line-height: 1.2;
-  margin: 8px 0;
-  letter-spacing: -0.6px;
+  margin: 9px 0;
+  letter-spacing: -0.7px;
 }
 
 .taskCard span {
@@ -693,9 +991,9 @@ button:disabled {
 }
 
 .score {
-  min-width: 46px;
-  height: 46px;
-  border-radius: 16px;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 17px;
   display: grid;
   place-items: center;
   font-size: 22px;
@@ -703,13 +1001,21 @@ button:disabled {
   background: rgba(255,255,255,0.14);
 }
 
+.darkApp .taskCard .score {
+  background: rgba(0,0,0,0.08);
+}
+
 .taskCard.muted .score {
   background: rgba(0,0,0,0.08);
 }
 
+.darkApp .taskCard.muted .score {
+  background: rgba(255,255,255,0.08);
+}
+
 .taskCard p {
-  margin: 16px 0 0;
-  line-height: 1.5;
+  margin: 17px 0 0;
+  line-height: 1.55;
   font-size: 14px;
 }
 
@@ -717,7 +1023,7 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 15px;
 }
 
 .chips span {
@@ -728,35 +1034,216 @@ button:disabled {
   font-weight: 700;
 }
 
+.darkApp .taskCard .chips span {
+  background: rgba(0,0,0,0.08);
+}
+
 .taskCard.muted .chips span {
   background: rgba(0,0,0,0.07);
 }
 
-@media (max-width: 840px) {
+.darkApp .taskCard.muted .chips span {
+  background: rgba(255,255,255,0.08);
+}
+
+.removeBtn {
+  margin-top: 16px;
+  padding: 10px 13px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  color: inherit;
+}
+
+.taskCard.muted .removeBtn {
+  background: rgba(0,0,0,0.06);
+}
+
+.focusScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: min(920px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.focusLogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  margin-bottom: 52px;
+}
+
+.focusEyebrow {
+  color: #aaa;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 900;
+}
+
+.focusScreen h1 {
+  font-size: clamp(48px, 8vw, 88px);
+  line-height: 0.95;
+  margin: 12px 0 18px;
+  letter-spacing: -4px;
+}
+
+.focusIntro {
+  color: #bdb7ad;
+  font-size: 19px;
+  max-width: 680px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.focusCards {
+  display: grid;
+  gap: 16px;
+}
+
+.focusTask {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 30px;
+  padding: 24px;
+}
+
+.focusNumber {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f7f2e8;
+  color: #111;
+  font-weight: 900;
+}
+
+.focusTask h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  letter-spacing: -0.7px;
+}
+
+.focusTask p {
+  color: #bdb7ad;
+  margin: 0;
+}
+
+.focusEmpty {
+  color: #aaa;
+  background: rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.exitFocus {
+  margin-top: 30px;
+  align-self: flex-start;
+  background: #f7f2e8;
+  color: #111;
+  border-radius: 999px;
+  padding: 14px 20px;
+}
+
+@media (max-width: 860px) {
+  .topNav {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
   .stats,
   .mainGrid,
   .planGrid {
     grid-template-columns: 1fr;
   }
 
-  .captureTop {
+  .captureTop,
+  .planHeader {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .hero h1 {
-    letter-spacing: -2px;
+    letter-spacing: -2.5px;
   }
 
-  .actions {
+  .actions,
+  .planButtons {
     justify-content: stretch;
   }
 
-  .actions button {
+  .actions button,
+  .planButtons button {
     flex: 1;
+  }
+
+  .stat strong {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: min(100% - 18px, 1120px);
+    padding-top: 12px;
+  }
+
+  .topNav {
+    flex-direction: column;
+  }
+
+  .navActions {
+    width: 100%;
+  }
+
+  .navActions button {
+    flex: 1;
+  }
+
+  .hero,
+  .capture,
+  .focusPlan {
+    border-radius: 26px;
+  }
+
+  .hero {
+    padding: 28px;
+  }
+
+  .hero h1 {
+    font-size: 47px;
+  }
+
+  .capture {
+    padding: 20px;
+  }
+
+  textarea {
+    font-size: 16px;
+  }
+
+  .toggle {
+    width: 100%;
+  }
+
+  .toggle button {
+    flex: 1;
+  }
+
+  .taskTop {
+    flex-direction: column;
   }
 }
 
 @media print {
+  .topNav,
   .hero,
   .capture,
   .stats,
